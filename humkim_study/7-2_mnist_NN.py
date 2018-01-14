@@ -16,13 +16,17 @@ X = tf.placeholder(tf.float32, [None, 784])
 # 0 - 9 digits recognition = 10 classes
 Y = tf.placeholder(tf.float32, [None, nb_classes])
 
-W = tf.Variable(tf.random_normal([784, nb_classes]), name='weight')
-b = tf.Variable(tf.random_normal([nb_classes]), name='bias')
+W1 = tf.Variable(tf.random_normal([784, nb_classes]), name='weight1')
+b1 = tf.Variable(tf.random_normal([nb_classes]), name='bias1')
+layer1 = tf.sigmoid(tf.matmul(X, W1) + b1)
 
-# tf.nn.softmax computes softmax activations
+W2 = tf.Variable(tf.random_normal([nb_classes, nb_classes]), name='weight2')
+b2 = tf.Variable(tf.random_normal([nb_classes]), name='bias2')
+
+# tf.sigmoid computes softmax activations
 # softmax = exp(logits) / reduce_sum(exp(logits), dim)
-logits = tf.matmul(X, W) + b
-hypothesis = tf.nn.softmax(logits)
+logits = tf.matmul(layer1, W2) + b2
+hypothesis = tf.sigmoid(logits)
 
 # Cross entropy cost/loss function
 cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), axis=1))
