@@ -16,21 +16,33 @@ X = tf.placeholder(tf.float32, [None, 784])
 # 0 - 9 digits recognition = 10 classes
 Y = tf.placeholder(tf.float32, [None, nb_classes])
 
-W1 = tf.Variable(tf.random_normal([784, nb_classes]), name='weight1')
-b1 = tf.Variable(tf.random_normal([nb_classes]), name='bias1')
-layer1 = tf.sigmoid(tf.matmul(X, W1) + b1)
+with tf.name_scope("layer1") as scope:
+    W1 = tf.Variable(tf.random_normal([784, 256]), name='weight1')
+    b1 = tf.Variable(tf.random_normal([256]), name='bias1')
+    layer1 = tf.sigmoid(tf.matmul(X, W1) + b1)
 
-W2 = tf.Variable(tf.random_normal([nb_classes, nb_classes]), name='weight2')
-b2 = tf.Variable(tf.random_normal([nb_classes]), name='bias2')
+    W1_hist = tf.summary.histogram("weight1", W1)
+    b1_hist = tf.summary.histogram("biases1", b1)
+    layer1_hist = tf.summary.histogram("layer1", layer1)
 
-# tf.sigmoid computes softmax activations
-# softmax = exp(logits) / reduce_sum(exp(logits), dim)
-logits = tf.matmul(layer1, W2) + b2
-hypothesis = tf.sigmoid(logits)
+with tf.name_scope("layer2") as scope:
+    W2 = tf.Variable(tf.random_normal([256, nb_classes]), name='weight2')
+    b2 = tf.Variable(tf.random_normal([nb_classes]), name='bias2')
+
+    # tf.sigmoid computes softmax activations
+    # softmax = exp(logits) / reduce_sum(exp(logits), dim)
+    logits = tf.matmul(layer1, W2) + b2
+    hypothesis = tf.sigmoid(logits)
+
+    W2_hist = tf.summary.histogram("weight2", W2)
+    b2_hist = tf.summary.histogram("biases2", b2)
+    hypothesis_hist = tf.summary.histogram("hypothesis", hypothesis)
 
 # Cross entropy cost/loss function
 cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), axis=1))
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.1).minimize(cost)
+
+cost_summ = tf.summary.scalar("cost", cost)
 
 # Test model
 is_correct = tf.equal(tf.arg_max(hypothesis, 1), tf.arg_max(Y, 1))
@@ -43,6 +55,11 @@ training_epochs = 15
 batch_size = 100
 
 with tf.Session() as sess:
+    summary = tf.summary.merge_all()
+    # Create summary writer
+    writer = tf.summary.FileWriter('./logs/mnist_logs')
+    writer.add_graph(sess.graph)
+
     # Initialize TensorFlow variables
     sess.run(tf.global_variables_initializer())
 
